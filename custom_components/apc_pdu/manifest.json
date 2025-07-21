@@ -1,0 +1,10 @@
+{
+  "domain": "apc_pdu",
+  "name": "APC PDU (SNMP)",
+  "version": "0.2",
+  "requirements": ["puresnmp==2.0.1"],
+  "codeowners": ["@yourgithubhandle"],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "documentation": "https://github.com/yourgithubhandle/apc_pdu"
+}
