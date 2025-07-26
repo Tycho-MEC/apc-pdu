@@ -1,4 +1,6 @@
 {
   "name": "APC PDU (SNMP)",
-  "render_readme": true
+  "render_readme": true,
+  "homeassistant": "2025.1.0",
+  "hacs": "2.0.0"
 }
