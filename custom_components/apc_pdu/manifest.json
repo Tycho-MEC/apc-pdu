@@ -1,11 +1,12 @@
 {
   "domain": "apc_pdu",
   "name": "APC PDU (SNMP)",
-  "version": "0.1.0",
-  "requirements": ["puresnmp==2.0.1"],
   "codeowners": ["@Tycho-MEC"],
   "config_flow": true,
+  "documentation": "https://github.com/Tycho-MEC/apc-pdu",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "documentation": "https://github.com/Tycho-MEC/apc-pdu"
+  "issue_tracker": "https://github.com/Tycho-MEC/apc-pdu/issues",
+  "requirements": ["puresnmp==2.0.1"],
+  "version": "0.1.1"
 }

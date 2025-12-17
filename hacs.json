@@ -1,6 +1,10 @@
 {
-  "name": "APC PDU (SNMP)",
-  "render_readme": true,
+  "domain": "apc_pdu",
+  "name": "APC PDU",
+  "documentation": "https://github.com/Tycho-MEC/apc-pdu",
+  "hacs": "2.0.0",
   "homeassistant": "2025.1.0",
-  "hacs": "2.0.0"
+  "integration_type": "device",
+  "iot_class": "Local Polling",
+  "render_readme": true
 }
