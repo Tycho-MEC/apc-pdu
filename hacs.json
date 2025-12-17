@@ -1,9 +1,5 @@
 {
-  "domain": "apc_pdu",
   "name": "APC PDU",
   "hacs": "2.0.0",
-  "homeassistant": "2025.1.0",
-  "integration_type": "device",
-  "iot_class": "Local Polling",
-  "render_readme": true
+  "homeassistant": "2025.1.0"
 }
