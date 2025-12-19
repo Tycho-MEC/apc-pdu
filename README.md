@@ -56,8 +56,10 @@ This integration was developed for the AP7920B, but it will likely work with oth
 
 The integration has been tested and proven to work with the following devices:
 * AP7920B
-* AP7921B (thanks to [@zotanmew](https://github.com/zotanmew))
-* AP8981 - without per port power monitoring (thanks to [@zotanmew](https://github.com/zotanmew))
+* AP7921B - fw v7.2.0 (thanks to [@zotanmew](https://github.com/zotanmew))
+* AP8981 - fw v6.8.2 without per port power monitoring (thanks to [@zotanmew](https://github.com/zotanmew))
+
+Firmware might need to be updated on the PDU for SNMP compatability.
 
 ### Installation
 
