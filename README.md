@@ -61,15 +61,24 @@ The integration has been tested and proven to work with the following devices:
 
 Firmware might need to be updated on the PDU for SNMP compatability.
 
-### Installation
+### HACS Installation
 
-To install the integration:
+The integration can be added as a custom repository to HACS which allows installation and updating from the Home Assistant UI.
+
+1. From the HACS Dashboard, select "Custom repositories" from the overflow menu (3 dots in the top right)
+2. Paste "https://github.com/Tycho-MEC/apc-pdu" in the Repository field
+3. From the Type drop down select "Integration", and then press the Add button
+4. Search for "APC PDU" from HACS search bar at the top and select the entry in the list
+5. Press Download to install the integration to your Home Assistant
+
+### Manual Installation
+
+To manually install the integration:
 
 1. Clone the repository
 2. Copy the apc_pdu folder to the custom_components folder in your Home Assistant installation
 3. Restart Home Assistant
 
-Support for HACS installation is planned.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
