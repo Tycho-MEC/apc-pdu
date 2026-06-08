@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.exceptions import HomeAssistantError
 
 from .snmp import snmp_get, snmp_set
-from .const import DOMAIN, BASE_OID
+from .const import DOMAIN, DEFAULT_PROFILE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,26 +21,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     outlet_count = int(data["outlet_count"])
     outlet_names = data.get("outlet_names", {})
     device_info = data.get("device_info", {})
+    # Fall back to default profile's base_oid for pre-profile config entries
+    base_oid = data.get("base_oid", DEFAULT_PROFILE["base_oid"])
     
-    _LOGGER.info("Setting up %d outlet switches for PDU %s", outlet_count, host)
+    _LOGGER.info("Setting up %d outlet switches for PDU %s (base OID: %s)", outlet_count, host, base_oid,)
     
     entities = []
     for outlet in range(1, outlet_count + 1):
         outlet_name = outlet_names.get(str(outlet), f"Outlet {outlet}")
-        entities.append(APCPDUSwitch(hass, host, community, outlet, outlet_name, device_info))
+        entities.append(APCPDUSwitch(hass, host, community, outlet, outlet_name, device_info, base_oid))
     
     async_add_entities(entities)
 
 class APCPDUSwitch(SwitchEntity):
     _attr_should_poll = True
 
-    def __init__(self, hass: HomeAssistant, host: str, community: str, outlet: int, outlet_name: str, device_info: dict) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, community: str, outlet: int, outlet_name: str, device_info: dict, base_oid: str,) -> None:
         self._hass = hass
         self._host = host
         self._community = community
         self._outlet = outlet
         self._outlet_name = outlet_name
         self._device_info = device_info
+        self._base_oid = base_oid
         self._state = None
         self._available = True
 
@@ -88,11 +91,12 @@ class APCPDUSwitch(SwitchEntity):
             "outlet_number": self._outlet,
             "outlet_name": self._outlet_name,
             "pdu_host": self._host,
+            "base_oid": self._base_oid,
         }
 
     async def async_update(self) -> None:
         """Fetch new state data for this switch."""
-        oid = f"{BASE_OID}.{self._outlet}"
+        oid = f"{self._base_oid}.{self._outlet}"
         try:
             result = await self._hass.async_add_executor_job(
                 snmp_get, self._host, self._community, oid
@@ -111,7 +115,7 @@ class APCPDUSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
-        oid = f"{BASE_OID}.{self._outlet}"
+        oid = f"{self._base_oid}.{self._outlet}"
         try:
             success = await self._hass.async_add_executor_job(
                 snmp_set, self._host, self._community, oid, 1
@@ -142,7 +146,7 @@ class APCPDUSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        oid = f"{BASE_OID}.{self._outlet}"
+        oid = f"{self._base_oid}.{self._outlet}"
         try:
             success = await self._hass.async_add_executor_job(
                 snmp_set, self._host, self._community, oid, 2

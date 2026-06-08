@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, CURRENT_OID
+from .const import DOMAIN, DEFAULT_PROFILE
 from .snmp import snmp_get
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,11 +36,15 @@ async def async_setup_entry(
     host = config_entry.data["host"]
     community = config_entry.data["community"]
     device_info = config_entry.data.get("device_info", {})
+    # Fall back to default profile's current_oid for pre-profile config entries
+    current_oid = config_entry.data.get("current_oid", DEFAULT_PROFILE["current_oid"])
+    current_divisor = config_entry.data.get("current_divisor", DEFAULT_PROFILE["current_divisor"])
     
-    _LOGGER.info("Setting up APC PDU current sensor for %s", host)
+    
+    _LOGGER.info("Setting up APC PDU current sensor for %s (OID: %s)", host, current_oid)
     
     # Create coordinator for data updates
-    coordinator = APCPDUCoordinator(hass, host, community)
+    coordinator = APCPDUCoordinator(hass, host, community, current_oid, current_divisor)
     
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
@@ -54,7 +58,7 @@ async def async_setup_entry(
 class APCPDUCoordinator(DataUpdateCoordinator):
     """Class to manage fetching APC PDU data from SNMP."""
     
-    def __init__(self, hass: HomeAssistant, host: str, community: str):
+    def __init__(self, hass: HomeAssistant, host: str, community: str, current_oid: str, current_divisor: float):
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -64,6 +68,8 @@ class APCPDUCoordinator(DataUpdateCoordinator):
         )
         self.host = host
         self.community = community
+        self.current_oid = current_oid
+        self.current_divisor = current_divisor
         
     async def _async_update_data(self):
         """Fetch data from APC PDU."""
@@ -72,12 +78,12 @@ class APCPDUCoordinator(DataUpdateCoordinator):
             
             # Fetch total current reading from PDU
             current_value = await self.hass.async_add_executor_job(
-                snmp_get, self.host, self.community, CURRENT_OID
+                snmp_get, self.host, self.community, self.current_oid
             )
             
             if current_value is not None:
                 # Convert from deciamps to amps (typical APC PDU format)
-                data["total_current"] = current_value / 10.0
+                data["total_current"] = current_value / self.current_divisor
                 _LOGGER.debug("PDU total current: %.1f A", data["total_current"])
             else:
                 _LOGGER.warning("Failed to read total current from PDU")

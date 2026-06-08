@@ -1,7 +1,7 @@
 from homeassistant import config_entries
 import voluptuous as vol
 from homeassistant.exceptions import HomeAssistantError
-from .const import DOMAIN
+from .const import DOMAIN, DEFAULT_PROFILE
 from .snmp import discover_outlets, discover_device_info
 import logging
 
@@ -22,24 +22,24 @@ class APCPDUConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.info("Testing connection to PDU at %s", host)
                 
                 # Discover outlets using executor
-                outlets = await self.hass.async_add_executor_job(
+                outlets, profile = await self.hass.async_add_executor_job(
                     discover_outlets, host, community
                 )
-                
-                # Discover device information
-                device_info = await self.hass.async_add_executor_job(
-                    discover_device_info, host, community
-                )
+
                 
                 if not outlets:
                     _LOGGER.error("No outlets discovered on PDU %s", host)
                     errors["base"] = "no_outlets_found"
                 else:
+                    # Discover device information
+                    device_info = await self.hass.async_add_executor_job(
+                        discover_device_info, host, community, profile
+                    )
                     # Store discovered outlet information
                     outlet_count = len(outlets)
                     outlet_names = {str(num): name for num, name in outlets}
                     
-                    _LOGGER.info("Discovered %d outlets on PDU %s", outlet_count, host)
+                    _LOGGER.info("Discovered %d outlets on PDU %s (profile: %s)", outlet_count, host, profile["label"],)
                     
                     config_data = {
                         "host": host,
@@ -47,6 +47,10 @@ class APCPDUConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "outlet_count": outlet_count,
                         "outlet_names": outlet_names,
                         "device_info": device_info,
+                        "pdu_family":      profile["family"],
+                        "base_oid":        profile["base_oid"],
+                        "current_oid":     profile["current_oid"],
+                        "current_divisor": profile["current_divisor"],
                     }
                     
                     # Use device name for title if available, otherwise fall back to host
