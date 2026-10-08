@@ -70,14 +70,71 @@ def snmp_walk(ip: str, community: str, base_oid: str) -> Dict[str, any]:
         _LOGGER.exception("SNMP WALK failed on %s (%s): %s", ip, base_oid, e)
         return {}
 
-def discover_outlets(ip: str, community: str) -> List[Tuple[int, str]]:
-    """Discover outlets and their names from the PDU."""
+
+
+
+
+# ---------------------------------------------------------------------------
+# Profile-based detection
+# ---------------------------------------------------------------------------
+
+def detect_pdu_profile(ip: str, community: str) -> Optional[Dict]:
+    """Probe each PDU profile in order and return the first one whose
+    base_oid.1 responds with a valid outlet state (1 = on, 2 = off).
+
+    Returns the matching profile dict from PDU_PROFILES, or None if no
+    profile matched.  
+    """
+    from .const import PDU_PROFILES
+
+    for profile in PDU_PROFILES:
+        probe_oid = f"{profile['base_oid']}.1"
+        _LOGGER.debug(
+            "Probing %s — profile '%s' (base OID: %s)",
+            ip, profile["label"], profile["base_oid"],
+        )
+        value = snmp_get(ip, community, probe_oid)
+        if value in (1, 2):
+            _LOGGER.info(
+                "PDU %s matched profile '%s' — outlet 1 is %s",
+                ip, profile["label"], "on" if value == 1 else "off",
+            )
+            return profile
+        _LOGGER.debug(
+            "PDU %s: profile '%s' returned %s — skipping",
+            ip, profile["label"], value,
+        )
+
+    _LOGGER.warning(
+        "PDU %s: no profile matched. Outlet control may not work.", ip
+    )
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Discovery helpers 
+# ---------------------------------------------------------------------------
+
+def discover_outlets(ip: str, community: str) -> Tuple[List[Tuple[int, str]], Optional[Dict]]:
+    """Detect PDU profile, walk outlet index/name tables, and return both.
+
+    Returns:
+        (outlets, profile)
+        - outlets: sorted list of (outlet_number, outlet_name)
+        - profile: the matched PDU profile dict (or DEFAULT_PROFILE on failure)
+    """
     try:
-        from .const import OUTLET_INDEX_OID, OUTLET_NAME_OID
-        
-        # Walk the outlet index OID to get all outlet numbers
-        index_results = snmp_walk(ip, community, OUTLET_INDEX_OID)
-        name_results = snmp_walk(ip, community, OUTLET_NAME_OID)
+        from .const import DEFAULT_PROFILE
+
+        profile = detect_pdu_profile(ip, community)
+        if profile is None:
+            _LOGGER.warning(
+                "Using default profile for %s — outlet control may not work", ip
+            )
+            profile = DEFAULT_PROFILE
+
+        index_results = snmp_walk(ip, community, profile["outlet_index_oid"])
+        name_results = snmp_walk(ip, community, profile["outlet_name_oid"])
         
         outlets = []
         
@@ -85,12 +142,11 @@ def discover_outlets(ip: str, community: str) -> List[Tuple[int, str]]:
         for oid, value in index_results.items():
             try:
                 # Extract the outlet index from the OID
-                # OID format: 1.3.6.1.4.1.318.1.1.12.3.3.1.1.1.X where X is outlet number
+                # OID format: base_oid.X where X is outlet number
                 outlet_num = int(oid.split('.')[-1])
                 outlet_index = int(value)
                 
                 # Find corresponding name
-                name_oid = None
                 outlet_name = f"Outlet {outlet_index}"  # Default name
                 
                 # Look for matching name OID
@@ -105,35 +161,34 @@ def discover_outlets(ip: str, community: str) -> List[Tuple[int, str]]:
             except (ValueError, IndexError) as e:
                 _LOGGER.warning("Failed to parse outlet from OID %s: %s", oid, e)
                 continue
-        
+       
         # Sort by outlet number
         outlets.sort(key=lambda x: x[0])
-        _LOGGER.info("Discovered %d outlets on PDU %s", len(outlets), ip)
-        return outlets
+        _LOGGER.info("Discovered %d outlets on PDU %s (profile: %s)", len(outlets), ip, profile["label"],)
+        return outlets, profile
         
     except Exception as e:
         _LOGGER.exception("Failed to discover outlets on %s: %s", ip, e)
-        return []
+        return ([], None)
 
-def discover_device_info(ip: str, community: str) -> Dict[str, str]:
+def discover_device_info(ip: str, community: str, profile: Dict) -> Dict[str, str]:
     """Discover device information from the PDU."""
     try:
-        from .const import DEVICE_NAME_OID, DEVICE_MODEL_OID, DEVICE_SERIAL_OID
         
         device_info = {}
         
         # Get device name
-        device_name = snmp_get_string(ip, community, DEVICE_NAME_OID)
+        device_name = snmp_get_string(ip, community, profile["device_name_oid"])
         if device_name:
             device_info["name"] = _clean_snmp_string(device_name)
         
         # Get device model
-        device_model = snmp_get_string(ip, community, DEVICE_MODEL_OID)
+        device_model = snmp_get_string(ip, community, profile["device_model_oid"])
         if device_model:
             device_info["model"] = _clean_snmp_string(device_model)
         
         # Get serial number
-        device_serial = snmp_get_string(ip, community, DEVICE_SERIAL_OID)
+        device_serial = snmp_get_string(ip, community, profile["device_serial_oid"])
         if device_serial:
             device_info["serial_number"] = _clean_snmp_string(device_serial)
         
