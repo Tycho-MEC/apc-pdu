@@ -55,8 +55,8 @@ Control and monitoring of the PDUs was already possible using the built-in SNMP 
 This integration was developed for the AP7920B, but it will likely work with other APC PDUs that have a simmilar MIB structure.
 
 The integration has been tested and proven to work with the following devices:
-* AP7901 - fw v3.9.2 without per port power monitoring
-* AP7920B
+* AP7901 - fw v3.9.2 without per port power monitoring  (thanks to [@bill-mcgonigle](https://github.com/bill-mcgonigle)
+* AP7920B - fw 6.8.0
 * AP7921B - fw v7.2.0 (thanks to [@zotanmew](https://github.com/zotanmew))
 * AP8981 - fw v6.8.2 without per port power monitoring (thanks to [@zotanmew](https://github.com/zotanmew))
 
@@ -64,13 +64,13 @@ Firmware might need to be updated on the PDU for SNMP compatability.
 
 ### HACS Installation
 
-The integration can be added as a custom repository to HACS which allows installation and updating from the Home Assistant UI.
+The integration can be installed through [HACS](https://www.hacs.xyz) which allows easy installation and updating from the Home Assistant UI.
 
-1. From the HACS Dashboard, select "Custom repositories" from the overflow menu (3 dots in the top right)
-2. Paste "https://github.com/Tycho-MEC/apc-pdu" in the Repository field
-3. From the Type drop down select "Integration", and then press the Add button
-4. Search for "APC PDU" from HACS search bar at the top and select the entry in the list
-5. Press Download to install the integration to your Home Assistant
+1. If HACS is not installed yet, download it following the instructions on https://hacs.xyz/docs/setup/download/
+2. Proceed to the HACS initial configuration following the instructions on https://hacs.xyz/docs/configuration/basic
+3. On your sidebar go to "HACS"
+4. Search for "APC PDU"
+5. Click on "Download"
 
 ### Manual Installation
 
@@ -112,8 +112,8 @@ The PDU will be added to Home Assistant as a device with a separate entity for e
 
 Planned features:
 
-- [ ] HACS Integration
-- [ ] PDU model identifcation
+- [✔] HACS Integration
+- [✔] PDU model identification
 - [ ] PDU health monitoring
 - [ ] Support for more APC PDU models
 
@@ -141,8 +141,8 @@ Don't forget to give the project a star! Thanks again!
 
 ### Top contributors:
 
-<a href="https://github.com/github_username/repo_name/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=github_username/repo_name" alt="contrib.rocks image" />
+<a href="https://github.com/Tycho-MEC/apc-pdu/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Tycho-MEC/apc-pdu" alt="contrib.rocks image" />
 </a>
 
 
