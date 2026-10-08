@@ -55,6 +55,7 @@ Control and monitoring of the PDUs was already possible using the built-in SNMP 
 This integration was developed for the AP7920B, but it will likely work with other APC PDUs that have a simmilar MIB structure.
 
 The integration has been tested and proven to work with the following devices:
+* AP7901 - fw v3.9.2 without per port power monitoring
 * AP7920B
 * AP7921B - fw v7.2.0 (thanks to [@zotanmew](https://github.com/zotanmew))
 * AP8981 - fw v6.8.2 without per port power monitoring (thanks to [@zotanmew](https://github.com/zotanmew))
@@ -89,6 +90,8 @@ To manually install the integration:
 
 SNMPv2 must be enabled on the PDU and be accessible from the Home Assistant installation!
 
+Some devices (e.g. AP7901) do not support SNMPv2 but the integration will work with SNMPv1 when configured with a community with 'write' or 'write+' access.
+
 To add a new matrix to Home Assistant:
 
 1. Go to "Settings" -> "Devices & services" to open the Integrations page, and then select "Add integration".
@@ -114,7 +117,7 @@ Planned features:
 - [ ] PDU health monitoring
 - [ ] Support for more APC PDU models
 
-See the [open issues](https://github.com/Tycho-MEC/extron_mav/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/Tycho-MEC/apc-pdu/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
